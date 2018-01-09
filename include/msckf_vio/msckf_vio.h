@@ -218,6 +218,8 @@ class MsckfVio {
 
     // Whether to publish tf or not.
     bool publish_tf;
+    // Whether to invert the transform to handle complex TF trees
+    bool invert_tf;
 
     // Framte rate of the stereo images. This variable is
     // only used to determine the timing threshold of

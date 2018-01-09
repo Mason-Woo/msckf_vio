@@ -78,7 +78,7 @@ link_directories(
 
 # Msckf Vio
 add_library(msckf_vio
-  src/msckf_vio.cpp
+  src/msckf_vio.cpp src/utils.cpp
 )
 add_dependencies(msckf_vio
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
@@ -105,6 +105,7 @@ target_link_libraries(msckf_vio_nodelet
 
 # Image processor
 add_library(image_processor
+  src/utils.cpp
   src/image_processor.cpp
 )
 add_dependencies(image_processor
@@ -144,4 +145,24 @@ target_link_libraries(test_feature_init
 # Math utils test
 catkin_add_gtest(test_math_utils
   test/math_utils_test.cpp
+)
+
+
+################################################################################
+## Install targets
+
+install(TARGETS msckf_vio_nodelet msckf_vio image_processor image_processor_nodelet
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(FILES
+  nodelets.xml
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+
+install(DIRECTORY
+  launch
+  config
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )

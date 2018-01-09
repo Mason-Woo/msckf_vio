@@ -1,0 +1,75 @@
+<launch>
+
+  <arg name="robot" default="rig"/>
+  <arg name="imu_subject" default="/$(arg robot)/imu"/>
+  <arg name="features_subject" default="/$(arg robot)/image_processor/features"/>
+  <arg name="publish_tf" default="false"/>
+  <arg name="invert_tf" default="false"/>
+  <arg name="frame_rate" default="20"/>
+  <arg name="fixed_frame_id" default="odom"/>
+  <arg name="robot_frame_id" default="imu"/>
+  <arg name="calibration_file"
+       default="$(find msckf_vio)/config/camchain-imucam-falcam.yaml"/>
+  <arg name="cam0_topic" default="/$(arg robot)/left/image_mono"/>
+  <arg name="cam1_topic" default="/$(arg robot)/right/image_mono"/>
+
+
+  <!-- Image Processor Nodelet  -->
+  <include file="$(find msckf_vio)/launch/image_processor.launch">
+    <arg name="robot" value="$(arg robot)"/>
+    <arg name="calibration_file" value="$(arg calibration_file)"/>
+    <arg name="imu_topic" value="$(arg imu_subject)"/>
+    <arg name="cam0_topic" value="$(arg cam0_topic)"/>
+    <arg name="cam1_topic" value="$(arg cam1_topic)"/>
+  </include>
+
+  <!-- Msckf Vio Nodelet  -->
+  <group ns="$(arg robot)">
+    <node pkg="nodelet" type="nodelet" name="vio"
+      args="standalone msckf_vio/MsckfVioNodelet"
+      output="screen">
+
+      <!-- Calibration parameters -->
+      <rosparam command="load" file="$(arg calibration_file)"/>
+
+      <param name="publish_tf" value="$(arg publish_tf)"/>
+      <param name="invert_tf" value="$(arg invert_tf)"/>
+      <param name="frame_rate" value="$(arg frame_rate)"/>
+      <param name="fixed_frame_id" value="$(arg fixed_frame_id)"/>
+      <param name="child_frame_id" value="$(arg robot_frame_id)"/>
+      <param name="max_cam_state_size" value="20"/>
+      <param name="position_std_threshold" value="8.0"/>
+
+      <!-- Feature optimization config -->
+      <param name="feature/config/translation_threshold" value="-1.0"/>
+
+      <!-- These values should be standard deviation -->
+      <param name="noise/gyro" value="0.01"/>
+      <param name="noise/acc" value="0.1"/>
+      <param name="noise/gyro_bias" value="0.005"/>
+      <param name="noise/acc_bias" value="0.05"/>
+      <param name="noise/feature" value="0.03"/>
+
+      <param name="initial_state/velocity/x" value="0.0"/>
+      <param name="initial_state/velocity/y" value="0.0"/>
+      <param name="initial_state/velocity/z" value="0.0"/>
+
+      <!-- These values should be covariance -->
+      <param name="initial_covariance/velocity" value="0.25"/>
+      <param name="initial_covariance/gyro_bias" value="0.0001"/>
+      <param name="initial_covariance/acc_bias" value="0.01"/>
+      <param name="initial_covariance/extrinsic_rotation_cov" value="3.0462e-4"/>
+      <param name="initial_covariance/extrinsic_translation_cov" value="2.5e-5"/>
+
+      <remap from="~imu" to="$(arg imu_subject)"/>
+      <remap from="~features" to="$(arg features_subject)"/>      
+      <!--<remap from="/fla/sync/cam0/image_raw" to="/fla/image_0"/>-->
+      <!--<remap from="/fla/sync/cam1/image_raw" to="/fla/image_2"/>-->
+      <!--
+      <remap from="~imu" to="/imu0"/>
+      <remap from="~mocap_odom" to="/vicon/firefly_sbx/firefly_sbx"/>
+      <remap from="~features" to="image_processor/features"/>
+      -->      
+    </node>
+  </group>
+</launch>
